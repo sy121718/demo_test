@@ -55,7 +55,7 @@ class ExceptionHandle extends Handle
         // ===== 业务层主动抛出的异常 =====
         // 通过 api_error() 函数抛出的异常，状态码由业务层控制
         // 例如：api_error('数据不存在', 404)
-        if (isset($e->isBusinessException) && $e->isBusinessException) {
+        if ($e instanceof \BusinessException) {
             $response = [
                 'msg' => $e->getMessage(),
                 'data' => null,
@@ -63,13 +63,11 @@ class ExceptionHandle extends Handle
             ];
             
             // 开发环境添加调试信息
-            if (app()->isDebug() && isset($e->debugInfo)) {
+            if (app()->isDebug() && $e->debugInfo !== null) {
                 $response['debug'] = $e->debugInfo;
             }
             
-            // 获取HTTP状态码（如果设置了httpCode属性，否则使用业务状态码）
-            $httpCode = isset($e->httpCode) ? $e->httpCode : $e->getCode();
-            return json($response, $httpCode);
+            return json($response, $e->httpCode);
         }
         
         // ===== ThinkPHP框架自动抛出的异常 =====
@@ -94,7 +92,7 @@ class ExceptionHandle extends Handle
                 ];
             }
             
-            return json($response, 500);
+            return json($response, 200);
         }
         
         // 处理验证器异常（框架自动抛出）
@@ -137,7 +135,7 @@ class ExceptionHandle extends Handle
                 ];
             }
             
-            return json($response, 404);
+            return json($response, 200);
         }
         
         // 处理类不存在异常（框架自动抛出）
@@ -158,7 +156,7 @@ class ExceptionHandle extends Handle
                 ];
             }
             
-            return json($response, 500);
+            return json($response, 200);
         }
 
         // ===== 其他系统异常 =====
@@ -181,6 +179,6 @@ class ExceptionHandle extends Handle
             ];
         }
         
-        return json($response, 500);
+        return json($response, 200);
     }
 }
